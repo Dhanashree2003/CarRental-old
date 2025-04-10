@@ -144,9 +144,8 @@ public class MainModule {
                         Date start = Date.valueOf(sc.nextLine());
                         System.out.print("End Date (yyyy-mm-dd): ");
                         Date end = Date.valueOf(sc.nextLine());
-                        
                         lease1.createLease(cid, vid, start, end);
-                        System.out.println("Lease created.");
+                        
                         break;
 
                    // case 11:

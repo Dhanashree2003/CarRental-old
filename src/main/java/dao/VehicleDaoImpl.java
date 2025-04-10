@@ -1,10 +1,6 @@
 package dao;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
+import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -13,88 +9,74 @@ import Exception.CarNotFoundException;
 import util.DBConnUtil;
 
 public class VehicleDaoImpl implements VehicleDao {
-	
-	private Connection connection;     
-    public VehicleDaoImpl() {
-   	    try {
-   	        connection = DBConnUtil.getConnection();
-   	    } catch (Exception e) {
-   	        e.printStackTrace();
-   	    }
-   	}
-	
-	@Override
-    public void addCar(Vehicle car) {
+
+    Connection connection;
+
+    @Override
+    public void addCar(Vehicle car) throws SQLException,ClassNotFoundException {
+    	connection = DBConnUtil.getConnection();
         String sql = "INSERT INTO Vehicle (vehicleID, make, model, year, dailyRate, status, passengerCapacity, engineCapacity) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
-        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
-            stmt.setInt(1, car.getVehicleID());
-            stmt.setString(2, car.getMake());
-            stmt.setString(3, car.getModel());
-            stmt.setInt(4, car.getYear());
-            stmt.setDouble(5, car.getDailyRate());
-            stmt.setString(6, car.getStatus());
-            stmt.setInt(7, car.getPassengerCapacity());
-            stmt.setDouble(8, car.getEngineCapacity());
-            stmt.executeUpdate();
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
+        PreparedStatement pst = connection.prepareStatement(sql);
+        pst.setInt(1, car.getVehicleID());
+        pst.setString(2, car.getMake());
+        pst.setString(3, car.getModel());
+        pst.setInt(4, car.getYear());
+        pst.setDouble(5, car.getDailyRate());
+        pst.setString(6, car.getStatus());
+        pst.setInt(7, car.getPassengerCapacity());
+        pst.setDouble(8, car.getEngineCapacity());
+        pst.executeUpdate();
     }
 
     @Override
-    public void removeCar(int carID) {
+    public void removeCar(int carID) throws SQLException,ClassNotFoundException {
+    	connection = DBConnUtil.getConnection();
         String sql = "DELETE FROM Vehicle WHERE vehicleID = ?";
-        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
-            stmt.setInt(1, carID);
-            int rows = stmt.executeUpdate();
-            if (rows == 0) throw new CarNotFoundException("Car ID not found: " + carID);
-        } catch (SQLException e) {
-            e.printStackTrace();
+        PreparedStatement pst = connection.prepareStatement(sql);
+        pst.setInt(1, carID);
+        int rows = pst.executeUpdate();
+        if (rows == 0) {
+            throw new CarNotFoundException("Car ID not found: " + carID);
         }
     }
 
     @Override
-    public List<Vehicle> listAvailableCars() {
+    public List<Vehicle> listAvailableCars() throws SQLException,ClassNotFoundException {
+    	connection = DBConnUtil.getConnection();
         List<Vehicle> cars = new ArrayList<>();
         String sql = "SELECT * FROM Vehicle WHERE status = 'available'";
-        try (Statement stmt = connection.createStatement(); ResultSet rs = stmt.executeQuery(sql)) {
-            while (rs.next()) {
-                cars.add(mapVehicle(rs));
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
+        Statement pst = connection.createStatement();
+        ResultSet rs = pst.executeQuery(sql);
+        while (rs.next()) {
+            cars.add(mapVehicle(rs));
         }
         return cars;
     }
 
     @Override
-    public List<Vehicle> listRentedCars() {
+    public List<Vehicle> listRentedCars() throws SQLException,ClassNotFoundException {
+    	connection = DBConnUtil.getConnection();
         List<Vehicle> cars = new ArrayList<>();
         String sql = "SELECT * FROM Vehicle WHERE status = 'notAvailable'";
-        try (Statement stmt = connection.createStatement(); ResultSet rs = stmt.executeQuery(sql)) {
-            while (rs.next()) {
-                cars.add(mapVehicle(rs));
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
+        Statement pst = connection.createStatement();
+        ResultSet rs = pst.executeQuery(sql);
+        while (rs.next()) {
+            cars.add(mapVehicle(rs));
         }
         return cars;
     }
 
     @Override
-    public Vehicle findCarById(int carID) {
+    public Vehicle findCarById(int carID) throws SQLException,ClassNotFoundException {
+    	connection = DBConnUtil.getConnection();
         String sql = "SELECT * FROM Vehicle WHERE vehicleID = ?";
-        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
-            stmt.setInt(1, carID);
-            ResultSet rs = stmt.executeQuery();
-            if (rs.next()) {
-                return mapVehicle(rs);
-            } else {
-                throw new CarNotFoundException("Car ID not found: " + carID);
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-            return null;
+        PreparedStatement pst = connection.prepareStatement(sql);
+        pst.setInt(1, carID);
+        ResultSet rs = pst.executeQuery();
+        if (rs.next()) {
+            return mapVehicle(rs);
+        } else {
+            throw new CarNotFoundException("Car ID not found: " + carID);
         }
     }
 
@@ -110,8 +92,4 @@ public class VehicleDaoImpl implements VehicleDao {
             rs.getDouble("engineCapacity")
         );
     }
-
-	
-
-
 }

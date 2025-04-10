@@ -1,90 +1,73 @@
 package dao;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
+import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
-import Exception.CustomerNotFoundException;
 import model.Customer;
+import Exception.CustomerNotFoundException;
 import util.DBConnUtil;
 
-public class CustomerDaoImpl implements CustomerDao{
-	
-	private Connection connection;     
-    public CustomerDaoImpl() {
-   	    try {
-   	        connection = DBConnUtil.getConnection();
-   	    } catch (Exception e) {
-   	        e.printStackTrace();
-   	    }
-   	}
+public class CustomerDaoImpl implements CustomerDao {
+
+    Connection connection;
+
     
 
     @Override
-    public void addCustomer(Customer customer) {
+    public void addCustomer(Customer customer) throws SQLException,ClassNotFoundException {
+    	connection = DBConnUtil.getConnection();
         String sql = "INSERT INTO Customer (customerID, firstName, lastName, email, phoneNumber) VALUES (?, ?, ?, ?, ?)";
-        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
-            stmt.setInt(1, customer.getCustomerID());
-            stmt.setString(2, customer.getFirstName());
-            stmt.setString(3, customer.getLastName());
-            stmt.setString(4, customer.getEmail());
-            stmt.setString(5, customer.getPhoneNumber());
-            stmt.executeUpdate();
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
+        PreparedStatement pst = connection.prepareStatement(sql);
+        pst.setInt(1, customer.getCustomerID());
+        pst.setString(2, customer.getFirstName());
+        pst.setString(3, customer.getLastName());
+        pst.setString(4, customer.getEmail());
+        pst.setString(5, customer.getPhoneNumber());
+        pst.executeUpdate();
     }
 
     @Override
-    public void removeCustomer(int customerID) {
+    public void removeCustomer(int customerID) throws SQLException,ClassNotFoundException {
+    	connection = DBConnUtil.getConnection();
         String sql = "DELETE FROM Customer WHERE customerID = ?";
-        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
-            stmt.setInt(1, customerID);
-            int rows = stmt.executeUpdate();
-            if (rows == 0) {
-                throw new CustomerNotFoundException("Customer ID not found: " + customerID);
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
+        PreparedStatement pst = connection.prepareStatement(sql);
+        pst.setInt(1, customerID);
+        int rows = pst.executeUpdate();
+        if (rows == 0) {
+            throw new CustomerNotFoundException("Customer ID not found: " + customerID);
         }
     }
 
     @Override
-    public List<Customer> listCustomers() {
+    public List<Customer> listCustomers() throws SQLException,ClassNotFoundException {
+    	connection = DBConnUtil.getConnection();
         List<Customer> customers = new ArrayList<>();
         String sql = "SELECT * FROM Customer";
-        try (Statement stmt = connection.createStatement(); ResultSet rs = stmt.executeQuery(sql)) {
-            while (rs.next()) {
-                customers.add(mapCustomer(rs));
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
+        Statement pst = connection.createStatement();
+        ResultSet rs = pst.executeQuery(sql);
+        while (rs.next()) {
+            customers.add(mapCustomer(rs));
         }
         return customers;
     }
 
     @Override
-    public Customer findCustomerById(int customerID) {
+    public Customer findCustomerById(int customerID) throws SQLException,ClassNotFoundException {
+    	connection = DBConnUtil.getConnection();
         String sql = "SELECT * FROM Customer WHERE customerID = ?";
-        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
-            stmt.setInt(1, customerID);
-            ResultSet rs = stmt.executeQuery();
-            if (rs.next()) {
-                return mapCustomer(rs);
-            } else {
-                throw new CustomerNotFoundException("Customer ID not found: " + customerID);
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-            return null;
+        PreparedStatement pst = connection.prepareStatement(sql);
+        pst.setInt(1, customerID);
+        ResultSet rs = pst.executeQuery();
+        if (rs.next()) {
+            return mapCustomer(rs);
+        } else {
+            throw new CustomerNotFoundException("Customer ID not found: " + customerID);
         }
     }
 
     private Customer mapCustomer(ResultSet rs) throws SQLException {
+    	
         return new Customer(
             rs.getInt("customerID"),
             rs.getString("firstName"),
@@ -93,7 +76,4 @@ public class CustomerDaoImpl implements CustomerDao{
             rs.getString("phoneNumber")
         );
     }
-    
-    
-
 }
